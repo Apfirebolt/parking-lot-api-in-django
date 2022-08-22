@@ -1,5 +1,6 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
+from . permissions import IsAdmin
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
@@ -20,7 +21,7 @@ class ListCustomUsersApiView(ListAPIView):
 class AreaCreateListApiView(ListCreateAPIView):
     serializer_class = AreaSerializer
     queryset = Area.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def perform_create(self, serializer):
         return super().perform_create(serializer)
@@ -29,6 +30,7 @@ class AreaCreateListApiView(ListCreateAPIView):
 class AreaUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = AreaSerializer
     queryset = Area.objects.all()
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
