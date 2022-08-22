@@ -72,7 +72,7 @@ class Ticket(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='parking_user_tickets')
     parking = models.ForeignKey(Parking, on_delete=models.CASCADE, related_name='parking_ticket')
     entry_time = models.DateTimeField('Entry Time', auto_now_add=True)
-    exit_time = models.DateTimeField('Exit Time')
+    exit_time = models.DateTimeField('Exit Time', auto_now=True)
     price = models.FloatField('Parking Price', default=0)
 
     def __str__(self):

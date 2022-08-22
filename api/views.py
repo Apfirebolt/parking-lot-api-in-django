@@ -98,7 +98,16 @@ class TicketCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        return super().perform_create(serializer)
+        serializer.save(user=self.request.user)
+        
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response({
+            'message': 'Parking Ticket created',
+        }, status=status.HTTP_201_CREATED)
 
 
 class TicketUpdateDeleteView(RetrieveUpdateDestroyAPIView):
@@ -109,7 +118,7 @@ class TicketUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({
-            'message': 'Parking successfully deleted',
+            'message': 'Parking Ticket successfully deleted',
         }, status=status.HTTP_204_NO_CONTENT)
 
 

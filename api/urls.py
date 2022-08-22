@@ -13,6 +13,8 @@ urlpatterns = [
     path('area/<int:pk>', AreaUpdateDeleteView.as_view(), name='area-crud'),
     path('parking', ParkingCreateListApiView.as_view(), name='parking-create-list'),
     path('parking/<int:pk>', ParkingUpdateDeleteView.as_view(), name='parking-crud'),
+    path('ticket', TicketCreateListApiView.as_view(), name='ticket-create-list'),
+    path('ticket/<int:pk>', TicketUpdateDeleteView.as_view(), name='ticket-crud'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
