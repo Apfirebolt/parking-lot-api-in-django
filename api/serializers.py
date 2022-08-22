@@ -15,3 +15,24 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+class AreaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Area
+        fields = '__all__'
+
+
+
+class ParkingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Parking
+        fields = '__all__'
+
+
+class TicketSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ticket
+        fields = '__all__'
