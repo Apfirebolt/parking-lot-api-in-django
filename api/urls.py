@@ -1,7 +1,8 @@
 from django.urls import path
 from django.conf.urls.static import static
 from parking import settings
-from . views import (  CreateCustomUserApiView, ListCustomUsersApiView, AreaCreateListApiView, AreaUpdateDeleteView )
+from . views import (  CreateCustomUserApiView, ListCustomUsersApiView, AreaCreateListApiView, AreaUpdateDeleteView, \
+    ParkingCreateListApiView, ParkingUpdateDeleteView, TicketCreateListApiView, TicketUpdateDeleteView )
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
@@ -10,6 +11,8 @@ urlpatterns = [
     path('users', ListCustomUsersApiView.as_view(), name='users'),
     path('area', AreaCreateListApiView.as_view(), name='area-create-list'),
     path('area/<int:pk>', AreaUpdateDeleteView.as_view(), name='area-crud'),
+    path('parking', ParkingCreateListApiView.as_view(), name='parking-create-list'),
+    path('parking/<int:pk>', ParkingUpdateDeleteView.as_view(), name='parking-crud'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
