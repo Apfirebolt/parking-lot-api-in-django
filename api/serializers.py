@@ -34,7 +34,13 @@ class ParkingSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
 
+    parking_charge = serializers.SerializerMethodField()
+
     class Meta:
         model = Ticket
         fields = '__all__'
         read_only_fields = ['user']
+
+    def get_parking_charge(self, obj):
+        hours = (obj.exit_time - obj.entry_time).seconds / 3600
+        return "{:.2f}".format(hours * obj.price)

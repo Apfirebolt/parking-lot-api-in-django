@@ -1,7 +1,6 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from . permissions import IsAdmin
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from . serializers import CustomUserSerializer, AreaSerializer, TicketSerializer, ParkingSerializer
@@ -91,8 +90,15 @@ class ParkingUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         }, status=status.HTTP_204_NO_CONTENT)
 
 
-    def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+    def update(self,request,*args,**kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,data = request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({
+            'message': 'Parking updated successfully',
+            'data': serializer.data
+        })
 
 class TicketCreateListApiView(ListCreateAPIView):
     serializer_class = TicketSerializer
