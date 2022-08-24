@@ -14,7 +14,6 @@ AREA_URL = reverse('api:area-create-list')
 
 CREATE_USER_URL = reverse('api:signup')
 TOKEN_URL = reverse('api:signin')
-AREA_URL = reverse('api:area-create-list')
 
 
 def create_user(**params):
@@ -99,6 +98,8 @@ class AdminAreaApiTests(TestCase):
         }
         self.user = get_user_model().objects.create_user(**payload)
         self.client.force_authenticate(self.user)
+        response = self.client.get(reverse('api:area-create-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
     def test_retrieve_area_list(self):
