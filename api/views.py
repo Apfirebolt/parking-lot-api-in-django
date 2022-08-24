@@ -1,5 +1,6 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from . permissions import IsAdmin
 from rest_framework import status
 from rest_framework.response import Response
@@ -15,6 +16,16 @@ class CreateCustomUserApiView(CreateAPIView):
 class ListCustomUsersApiView(ListAPIView):
     serializer_class = CustomUserSerializer
     queryset = CustomUser.objects.all()
+
+class ManageUserView(RetrieveUpdateAPIView):
+    """Manage the authenticated user"""
+    serializer_class = CustomUserSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        """Retrieve and return authentication user"""
+        return self.request.user
 
 
 class AreaCreateListApiView(ListCreateAPIView):

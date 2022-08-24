@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'parking.wsgi.application'
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.postgresql',
-       'NAME': 'parking-lot',
+       'NAME': 'parking',
        'USER': 'postgres',
        'PASSWORD': 'pass12345',
        'HOST': 'localhost',
