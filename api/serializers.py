@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import CustomUser, Parking, Area, Ticket
+from . models import CustomUser, Parking, Area, Ticket, ParkingPrice, ParkingSection, Vehicle
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -45,3 +45,11 @@ class TicketSerializer(serializers.ModelSerializer):
     def get_parking_charge(self, obj):
         hours = (obj.exit_time - obj.entry_time).seconds / 3600
         return "{:.2f}".format(hours * obj.price)
+    
+
+class VehicleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Vehicle
+        fields = '__all__'
+        read_only_fields = ['user']

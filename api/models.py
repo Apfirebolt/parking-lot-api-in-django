@@ -163,7 +163,7 @@ class Ticket(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='vehicle_ticket', null=True, blank=True)
     entry_time = models.DateTimeField('Entry Time', auto_now_add=True)
     exit_time = models.DateTimeField('Exit Time', auto_now=True)
-    price = models.ForeignKey(ParkingPrice, on_delete=models.CASCADE, related_name='parking_ticket_price')
+    parking_price = models.ForeignKey(ParkingPrice, on_delete=models.CASCADE, related_name='parking_price_ticket', null=True, blank=True)
 
     def __str__(self):
         return str(self.entry_time) + ' - ' + str(self.exit_time)

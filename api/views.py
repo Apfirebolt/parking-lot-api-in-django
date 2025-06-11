@@ -4,8 +4,8 @@ from rest_framework.authentication import TokenAuthentication
 from . permissions import IsAdmin
 from rest_framework import status
 from rest_framework.response import Response
-from . serializers import CustomUserSerializer, AreaSerializer, TicketSerializer, ParkingSerializer
-from . models import CustomUser, Parking, Area, Ticket
+from . serializers import CustomUserSerializer, AreaSerializer, TicketSerializer, ParkingSerializer, VehicleSerializer
+from . models import CustomUser, Parking, Area, Ticket, Vehicle
 
 
 class CreateCustomUserApiView(CreateAPIView):
@@ -143,3 +143,41 @@ class TicketUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
+    
+
+class VehicleCreateListApiView(ListCreateAPIView):
+    serializer_class = VehicleSerializer
+    queryset = Vehicle.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response({
+            'message': 'Vehicle created',
+        }, status=status.HTTP_201_CREATED)
+    
+
+class VehicleUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    serializer_class = VehicleSerializer
+    queryset = Vehicle.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            'message': 'Vehicle successfully deleted',
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+    
+    
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
