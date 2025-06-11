@@ -1,0 +1,9 @@
+ruff
+pytest
+pytest-django
+coverage
+black
+mypy
+isort
+django-debug-toolbar
+ipython
