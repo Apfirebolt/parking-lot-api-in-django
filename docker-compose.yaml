@@ -15,14 +15,10 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      # This DATABASE_URL uses the service name 'db' and the internal container port '5432'
-      DATABASE_URL: postgres://postgres:pass123@db:5432/parking_lot
     depends_on:
       - db
 
