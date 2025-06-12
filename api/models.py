@@ -64,7 +64,7 @@ class Parking(models.Model):
     name = models.CharField('Parking Name', max_length=100, null=True, blank=True)
     location = models.CharField('Parking Location', max_length=255, null=True, blank=True)
     description = models.TextField('Parking Description', null=True, blank=True)
-    size = models.CharField('Parking Size', max_length=150, choices=SIZE_CHOICES, default="Four-Small")
+    capacity = models.IntegerField('Parking Capacity', default=0)
 
     def __str__(self):
         return self.size

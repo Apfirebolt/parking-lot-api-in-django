@@ -31,7 +31,7 @@ class ParkingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parking
         fields = "__all__"
-        read_only_fields = ["user", "area"]
+        read_only_fields = ["user",]
 
 
 class TicketSerializer(serializers.ModelSerializer):

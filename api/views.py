@@ -1,3 +1,4 @@
+import logging
 from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
@@ -29,6 +30,10 @@ from .models import (
     Passes
 )
 
+# Get an instance of a logger
+api_errors_logger = logging.getLogger('api_errors')
+parking_logger = logging.getLogger(__name__) # General logger for this module
+
 
 class CreateCustomUserApiView(CreateAPIView):
     serializer_class = CustomUserSerializer
@@ -58,28 +63,48 @@ class ParkingCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        size = self.request.data["size"]
-        if not size:
+        capacity = self.request.data.get("capacity")
+        if capacity is None:
+            parking_logger.warning(f"Capacity is missing for user: {self.request.user.id}")
+            raise ValueError("Capacity is required")
+
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(f"Parking lot created successfully by user: {self.request.user.id} with capacity: {capacity}")
+        except Exception as e:
+            parking_logger.error(f"Error saving parking lot for user {self.request.user.id}: {str(e)}")
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
             return Response(
                 {
-                    "message": "Size is required",
+                    "message": "Parking lot created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except ValueError as ve:
+            parking_logger.warning(f"Validation error during parking lot creation: {str(ve)}")
+            return Response(
+                {
+                    "message": str(ve),
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except Exception as e:
+            api_errors_logger.exception(f"Unhandled error in ParkingCreateListApiView.create for user {request.user.id}:")
+            # `logger.exception()` is a convenient way to log an error with traceback
+            return Response(
+                {
+                    "message": "An error occurred while creating the parking lot.",
+                    "error": "Please try again later or contact support.", # Don't expose raw exception to client
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        # vacant area is available now create parking slot
-        serializer.save(user=self.request.user)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Parking lot created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
 
 
 class ParkingUpdateDeleteView(RetrieveUpdateDestroyAPIView):
