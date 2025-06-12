@@ -59,25 +59,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Users"
 
 
-class Area(models.Model):
-    name = models.CharField('Area Name', max_length=100, null=True, blank=True)
-    capacity = models.IntegerField('Capacity', default=0)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name_plural = "Areas"
-
-
-
 class Parking(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='parking_created')
     name = models.CharField('Parking Name', max_length=100, null=True, blank=True)
     location = models.CharField('Parking Location', max_length=255, null=True, blank=True)
     description = models.TextField('Parking Description', null=True, blank=True)
     size = models.CharField('Parking Size', max_length=150, choices=SIZE_CHOICES, default="Four-Small")
-    area = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='area_parkings')
 
     def __str__(self):
         return self.size

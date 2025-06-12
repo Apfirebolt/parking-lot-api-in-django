@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from . models import CustomUser, Parking, Area, Ticket, ParkingPrice, ParkingSection, Vehicle
+from .models import (
+    CustomUser,
+    Parking,
+    Ticket,
+    ParkingPrice,
+    ParkingSection,
+    Vehicle,
+)
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -7,30 +14,22 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'is_staff', 'password')
-        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+        fields = ("username", "email", "is_staff", "password")
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     def create(self, validated_data):
         user = super(CustomUserSerializer, self).create(validated_data)
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data["password"])
         user.save()
         return user
-
-
-class AreaSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Area
-        fields = '__all__'
-
 
 
 class ParkingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parking
-        fields = '__all__'
-        read_only_fields = ['user', 'area']
+        fields = "__all__"
+        read_only_fields = ["user", "area"]
 
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -39,17 +38,44 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = '__all__'
-        read_only_fields = ['user']
+        fields = "__all__"
+        read_only_fields = ["user"]
 
     def get_parking_charge(self, obj):
         hours = (obj.exit_time - obj.entry_time).seconds / 3600
         return "{:.2f}".format(hours * obj.price)
-    
+
 
 class VehicleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vehicle
-        fields = '__all__'
-        read_only_fields = ['user']
+        fields = "__all__"
+        read_only_fields = ["user"]
+
+
+class ParkingPriceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ParkingPrice
+        fields = "__all__"
+        read_only_fields = ["parking_section"]
+
+    def validate(self, data):
+        if data["price"] < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
+        return data
+
+
+class ParkingSectionSerializer(serializers.ModelSerializer):
+    parking_prices = ParkingPriceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ParkingSection
+        fields = "__all__"
+        read_only_fields = ["parking_prices"]
+
+    def validate(self, data):
+        if data["capacity"] < 0:
+            raise serializers.ValidationError("Capacity cannot be negative.")
+        return data
