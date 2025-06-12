@@ -61,7 +61,6 @@ class ParkingPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingPrice
         fields = "__all__"
-        read_only_fields = ["parking_section"]
 
     def validate(self, data):
         if data["price"] < 0:
@@ -91,7 +90,7 @@ class PassesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Passes
         fields = "__all__"
-        read_only_fields = ["user", "parking", "vehicle"]
+        read_only_fields = ["user",]
 
     def validate(self, data):
         if data["start_date"] >= data["end_date"]:

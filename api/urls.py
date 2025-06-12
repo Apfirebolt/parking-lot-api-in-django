@@ -60,7 +60,7 @@ urlpatterns = [
         name="parking-price-crud",
     ),
     path("passes", PassesCreateListApiView.as_view(), name="passes-create-list"),
-    path("passes/<int:pk>", PassesUpdateDeleteView.as_view(), name="passes-crud"),
+    path("passes/<uuid:pk>", PassesUpdateDeleteView.as_view(), name="passes-crud"),
     path("ticket", TicketCreateListApiView.as_view(), name="ticket-create-list"),
     path("ticket/<int:pk>", TicketUpdateDeleteView.as_view(), name="ticket-crud"),
     path("vehicle", VehicleCreateListApiView.as_view(), name="vehicle-create-list"),

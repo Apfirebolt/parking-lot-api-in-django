@@ -18,7 +18,8 @@ from .serializers import (
     VehicleSerializer,
     ParkingSectionSerializer,
     PassesSerializer,
-    ParkingSlotSerializer
+    ParkingSlotSerializer,
+    ParkingPriceSerializer
 )
 from .models import (
     CustomUser,
@@ -455,13 +456,13 @@ class VehicleUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
 
 class ParkingPriceCreateListApiView(ListCreateAPIView):
-    serializer_class = ParkingSectionSerializer
+    serializer_class = ParkingPriceSerializer
     queryset = ParkingPrice.objects.all()
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         try:
-            serializer.save(user=self.request.user)
+            serializer.save()
             parking_logger.info(
                 f"Parking Price created by user: {self.request.user.id}"
             )
@@ -496,7 +497,7 @@ class ParkingPriceCreateListApiView(ListCreateAPIView):
 
 
 class ParkingPriceUpdateDeleteView(RetrieveUpdateDestroyAPIView):
-    serializer_class = ParkingSectionSerializer
+    serializer_class = ParkingPriceSerializer
     queryset = ParkingPrice.objects.all()
 
     def destroy(self, request, *args, **kwargs):
