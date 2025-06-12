@@ -45,7 +45,7 @@ class UserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    """Custom user model that suppors using email instead of username"""
+    """Custom user model that supports using email instead of username"""
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
@@ -157,6 +157,3 @@ class Ticket(models.Model):
 
     class Meta:
         verbose_name_plural = "Ticket"
-
-
-

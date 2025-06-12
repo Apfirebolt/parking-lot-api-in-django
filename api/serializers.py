@@ -5,7 +5,9 @@ from .models import (
     Ticket,
     ParkingPrice,
     ParkingSection,
+    ParkingSlot,
     Vehicle,
+    Passes,
 )
 
 
@@ -78,4 +80,30 @@ class ParkingSectionSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data["capacity"] < 0:
             raise serializers.ValidationError("Capacity cannot be negative.")
+        return data
+
+
+class ParkingSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlot
+        fields = "__all__"
+        read_only_fields = ["section"]
+
+    def validate(self, data):
+        if data["slot_number"] == "":
+            raise serializers.ValidationError("Slot number cannot be empty.")
+        return data
+
+
+class PassesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Passes
+        fields = "__all__"
+        read_only_fields = ["user", "parking", "vehicle"]
+
+    def validate(self, data):
+        if data["start_date"] >= data["end_date"]:
+            raise serializers.ValidationError("Start date must be before end date.")
+        if data["price"] < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
         return data

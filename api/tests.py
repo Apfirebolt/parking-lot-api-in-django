@@ -82,27 +82,3 @@ class PublicUserApiTests(TestCase):
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         
-        
-    def test_retrieve_area_list(self):
-        """Test retrieving a list of areas"""
-        Area.objects.create(capacity=10, name='Kale')
-        Area.objects.create(capacity=20, name='Salt')
-
-        res = self.client.get(AREA_URL)
-
-        areas = Area.objects.all()
-        serializer = AreaSerializer(areas, many=True)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
-    
-    
-    def test_create_area_successful(self):
-        """Test create a new area"""
-        payload = {'capacity': 200, 'name': 'Cabbage'}
-        self.client.post(AREA_URL, payload)
-
-        exists = Area.objects.filter(
-            capacity=payload['capacity'],
-            name=payload['name'],
-        ).exists()
-        self.assertTrue(exists)
