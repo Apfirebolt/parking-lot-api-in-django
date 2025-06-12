@@ -351,7 +351,7 @@ class TicketCreateListApiView(ListCreateAPIView):
 
 class TicketUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = TicketSerializer
-    queryset = Parking.objects.all()
+    queryset = Ticket.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
