@@ -17,7 +17,7 @@ from .serializers import (
     ParkingSerializer,
     VehicleSerializer,
     ParkingSectionSerializer,
-    PassesSerializer
+    PassesSerializer,
 )
 from .models import (
     CustomUser,
@@ -27,12 +27,12 @@ from .models import (
     ParkingPrice,
     ParkingSlot,
     ParkingSection,
-    Passes
+    Passes,
 )
 
 # Get an instance of a logger
-api_errors_logger = logging.getLogger('api_errors')
-parking_logger = logging.getLogger(__name__) # General logger for this module
+api_errors_logger = logging.getLogger("api_errors")
+parking_logger = logging.getLogger(__name__)  # General logger for this module
 
 
 class CreateCustomUserApiView(CreateAPIView):
@@ -65,14 +65,20 @@ class ParkingCreateListApiView(ListCreateAPIView):
     def perform_create(self, serializer):
         capacity = self.request.data.get("capacity")
         if capacity is None:
-            parking_logger.warning(f"Capacity is missing for user: {self.request.user.id}")
+            parking_logger.warning(
+                f"Capacity is missing for user: {self.request.user.id}"
+            )
             raise ValueError("Capacity is required")
 
         try:
             serializer.save(user=self.request.user)
-            parking_logger.info(f"Parking lot created successfully by user: {self.request.user.id} with capacity: {capacity}")
+            parking_logger.info(
+                f"Parking lot created successfully by user: {self.request.user.id} with capacity: {capacity}"
+            )
         except Exception as e:
-            parking_logger.error(f"Error saving parking lot for user {self.request.user.id}: {str(e)}")
+            parking_logger.error(
+                f"Error saving parking lot for user {self.request.user.id}: {str(e)}"
+            )
             raise
 
     def create(self, request, *args, **kwargs):
@@ -87,7 +93,9 @@ class ParkingCreateListApiView(ListCreateAPIView):
                 status=status.HTTP_201_CREATED,
             )
         except ValueError as ve:
-            parking_logger.warning(f"Validation error during parking lot creation: {str(ve)}")
+            parking_logger.warning(
+                f"Validation error during parking lot creation: {str(ve)}"
+            )
             return Response(
                 {
                     "message": str(ve),
@@ -95,16 +103,17 @@ class ParkingCreateListApiView(ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            api_errors_logger.exception(f"Unhandled error in ParkingCreateListApiView.create for user {request.user.id}:")
+            api_errors_logger.exception(
+                f"Unhandled error in ParkingCreateListApiView.create for user {request.user.id}:"
+            )
             # `logger.exception()` is a convenient way to log an error with traceback
             return Response(
                 {
                     "message": "An error occurred while creating the parking lot.",
-                    "error": "Please try again later or contact support.", # Don't expose raw exception to client
+                    "error": "Please try again later or contact support.",  # Don't expose raw exception to client
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 
 
 class ParkingUpdateDeleteView(RetrieveUpdateDestroyAPIView):
@@ -112,23 +121,53 @@ class ParkingUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Parking.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Parking successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Parking with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Parking successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting parking with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the parking.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(
-            {"message": "Parking updated successfully", "data": serializer.data}
-        )
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            parking_logger.info(
+                f"Parking with id {instance.id} updated by user {request.user.id}"
+            )
+            return Response(
+                {"message": "Parking updated successfully", "data": serializer.data}
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error updating parking with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while updating the parking.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ParkingSectionCreateListApiView(ListCreateAPIView):
@@ -137,18 +176,39 @@ class ParkingSectionCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(
+                f"Parking Section created by user: {self.request.user.id}"
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error creating Parking Section by user {self.request.user.id}: {str(e)}"
+            )
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Parking Section created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(
+                {
+                    "message": "Parking Section created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Unhandled error in ParkingSectionCreateListApiView.create for user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while creating the Parking Section.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ParkingSectionUpdateDeleteView(RetrieveUpdateDestroyAPIView):
@@ -156,14 +216,29 @@ class ParkingSectionUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Parking.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Parking Section successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Parking Section with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Parking Section successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting Parking Section with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the Parking Section.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
@@ -175,18 +250,37 @@ class ParkingSlotCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(f"Parking Slot created by user: {self.request.user.id}")
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error creating Parking Slot by user {self.request.user.id}: {str(e)}"
+            )
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Parking Slot created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(
+                {
+                    "message": "Parking Slot created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Unhandled error in ParkingSlotCreateListApiView.create for user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while creating the Parking Slot.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ParkingSlotUpdateDeleteView(RetrieveUpdateDestroyAPIView):
@@ -194,17 +288,48 @@ class ParkingSlotUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = ParkingSlot.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Parking Slot successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Parking Slot with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Parking Slot successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting Parking Slot with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the Parking Slot.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+        try:
+            response = super().put(request, *args, **kwargs)
+            parking_logger.info(
+                f"Parking Slot with id {getattr(self.get_object(), 'id', None)} updated by user {request.user.id}"
+            )
+            return response
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error updating Parking Slot with id {getattr(self.get_object(), 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while updating the Parking Slot.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class TicketCreateListApiView(ListCreateAPIView):
@@ -251,18 +376,37 @@ class VehicleCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(f"Vehicle created by user: {self.request.user.id}")
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error creating Vehicle by user {self.request.user.id}: {str(e)}"
+            )
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Vehicle created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(
+                {
+                    "message": "Vehicle created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Unhandled error in VehicleCreateListApiView.create for user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while creating the Vehicle.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class VehicleUpdateDeleteView(RetrieveUpdateDestroyAPIView):
@@ -270,21 +414,49 @@ class VehicleUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Vehicle.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Vehicle successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Vehicle with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Vehicle successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting Vehicle with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the Vehicle.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+        try:
+            response = super().put(request, *args, **kwargs)
+            parking_logger.info(
+                f"Vehicle with id {getattr(self.get_object(), 'id', None)} updated by user {request.user.id}"
+            )
+            return response
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error updating Vehicle with id {getattr(self.get_object(), 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while updating the Vehicle.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-    
 
 class ParkingPriceCreateListApiView(ListCreateAPIView):
     serializer_class = ParkingSectionSerializer
@@ -292,37 +464,89 @@ class ParkingPriceCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(
+                f"Parking Price created by user: {self.request.user.id}"
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error creating Parking Price by user {self.request.user.id}: {str(e)}"
+            )
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Parking Price created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
-    
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(
+                {
+                    "message": "Parking Price created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Unhandled error in ParkingPriceCreateListApiView.create for user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while creating the Parking Price.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class ParkingPriceUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = ParkingSectionSerializer
     queryset = ParkingPrice.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Parking Price successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Parking Price with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Parking Price successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting Parking Price with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the Parking Price.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
-    
+        try:
+            response = super().put(request, *args, **kwargs)
+            parking_logger.info(
+                f"Parking Price with id {getattr(self.get_object(), 'id', None)} updated by user {request.user.id}"
+            )
+            return response
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error updating Parking Price with id {getattr(self.get_object(), 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while updating the Parking Price.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class PassesCreateListApiView(ListCreateAPIView):
     serializer_class = PassesSerializer
@@ -330,33 +554,83 @@ class PassesCreateListApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+            parking_logger.info(f"Passes created by user: {self.request.user.id}")
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error creating Passes by user {self.request.user.id}: {str(e)}"
+            )
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            {
-                "message": "Passes created",
-            },
-            status=status.HTTP_201_CREATED,
-        )
-    
-    
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(
+                {
+                    "message": "Passes created",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Unhandled error in PassesCreateListApiView.create for user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while creating the Passes.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class PassesUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = PassesSerializer
     queryset = Passes.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(
-            {
-                "message": "Passes successfully deleted",
-            },
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            parking_logger.info(
+                f"Passes with id {instance.id} deleted by user {request.user.id}"
+            )
+            return Response(
+                {
+                    "message": "Passes successfully deleted",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error deleting Passes with id {getattr(instance, 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while deleting the Passes.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+        try:
+            response = super().put(request, *args, **kwargs)
+            parking_logger.info(
+                f"Passes with id {getattr(self.get_object(), 'id', None)} updated by user {request.user.id}"
+            )
+            return response
+        except Exception as e:
+            api_errors_logger.exception(
+                f"Error updating Passes with id {getattr(self.get_object(), 'id', None)} by user {request.user.id}: {str(e)}"
+            )
+            return Response(
+                {
+                    "message": "An error occurred while updating the Passes.",
+                    "error": "Please try again later or contact support.",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
