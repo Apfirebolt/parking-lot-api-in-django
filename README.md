@@ -20,3 +20,14 @@ To be added later
 
 To be added later
 
+## How Docker volumes work?
+
+Used the docker compose command to spawn off both the containers, delete db container and then created it again. The Database was still there. I used the following commands. The first command re-creates the db container, the second command creates both the containers for the first time.
+
+
+```yaml
+docker-compose up -d db
+
+docker-compose up --build   
+```
+
