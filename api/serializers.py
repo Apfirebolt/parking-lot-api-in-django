@@ -70,24 +70,16 @@ class ParkingPriceSerializer(serializers.ModelSerializer):
 
 
 class ParkingSectionSerializer(serializers.ModelSerializer):
-    parking_prices = ParkingPriceSerializer(many=True, read_only=True)
 
     class Meta:
         model = ParkingSection
         fields = "__all__"
-        read_only_fields = ["parking_prices"]
-
-    def validate(self, data):
-        if data["capacity"] < 0:
-            raise serializers.ValidationError("Capacity cannot be negative.")
-        return data
 
 
 class ParkingSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingSlot
         fields = "__all__"
-        read_only_fields = ["section"]
 
     def validate(self, data):
         if data["slot_number"] == "":

@@ -18,6 +18,7 @@ from .serializers import (
     VehicleSerializer,
     ParkingSectionSerializer,
     PassesSerializer,
+    ParkingSlotSerializer
 )
 from .models import (
     CustomUser,
@@ -175,23 +176,18 @@ class ParkingSectionCreateListApiView(ListCreateAPIView):
     queryset = ParkingSection.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        try:
-            serializer.save(user=self.request.user)
-            parking_logger.info(
-                f"Parking Section created by user: {self.request.user.id}"
-            )
-        except Exception as e:
-            api_errors_logger.exception(
-                f"Error creating Parking Section by user {self.request.user.id}: {str(e)}"
-            )
-            raise
-
+    # perform_create method is removed and its logic is moved here
     def create(self, request, *args, **kwargs):
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
+
+            # --- DEBUGGING LOG: Log validated_data right before save ---
+            api_errors_logger.debug(f"DEBUG: validated_data before serializer.save(): {serializer.validated_data}")
+        
+            serializer.save()
+            parking_logger.info("Parking Section created")
+
             return Response(
                 {
                     "message": "Parking Section created",
@@ -199,12 +195,10 @@ class ParkingSectionCreateListApiView(ListCreateAPIView):
                 status=status.HTTP_201_CREATED,
             )
         except Exception as e:
-            api_errors_logger.exception(
-                f"Unhandled error in ParkingSectionCreateListApiView.create for user {request.user.id}: {str(e)}"
-            )
+            api_errors_logger.exception("Unhandled error in ParkingSectionCreateListApiView.create for user %s", self.request.user.id)
             return Response(
                 {
-                    "message": "An error occurred while creating the Parking Section.",
+                    "message": "New errors to come.",
                     "error": "Please try again later or contact support.",
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -213,14 +207,14 @@ class ParkingSectionCreateListApiView(ListCreateAPIView):
 
 class ParkingSectionUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = ParkingSectionSerializer
-    queryset = Parking.objects.all()
+    queryset = ParkingSection.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
             self.perform_destroy(instance)
             parking_logger.info(
-                f"Parking Section with id {instance.id} deleted by user {request.user.id}"
+                f"Parking Section with id {instance.id} deleted"
             )
             return Response(
                 {
@@ -242,21 +236,23 @@ class ParkingSectionUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
+    
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class ParkingSlotCreateListApiView(ListCreateAPIView):
-    serializer_class = ParkingSectionSerializer
+    serializer_class = ParkingSlotSerializer
     queryset = ParkingSlot.objects.all()
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         try:
-            serializer.save(user=self.request.user)
-            parking_logger.info(f"Parking Slot created by user: {self.request.user.id}")
+            serializer.save()
+            parking_logger.info("Parking Slot created")
         except Exception as e:
-            api_errors_logger.exception(
-                f"Error creating Parking Slot by user {self.request.user.id}: {str(e)}"
-            )
+            api_errors_logger.exception("Error creating Parking Slot by user")
             raise
 
     def create(self, request, *args, **kwargs):
@@ -284,7 +280,7 @@ class ParkingSlotCreateListApiView(ListCreateAPIView):
 
 
 class ParkingSlotUpdateDeleteView(RetrieveUpdateDestroyAPIView):
-    serializer_class = ParkingSectionSerializer
+    serializer_class = ParkingSlotSerializer
     queryset = ParkingSlot.objects.all()
 
     def destroy(self, request, *args, **kwargs):
